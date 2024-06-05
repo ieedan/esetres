@@ -21,3 +21,5 @@ Cargo.lock
 # Custom
 
 .env
+mime-db.json
+buckets/
