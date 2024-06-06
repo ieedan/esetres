@@ -1,26 +1,21 @@
-use esetres::{config, mime, router::{self, AppState}};
+use clap::Parser;
+use esetres::commands::{start, Commands};
+
+#[derive(Parser, Debug)]
+#[command(version, about, author, long_about = None)]
+struct Cli {
+    /// Commands to execute
+    #[clap(subcommand)]
+    command: Commands,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = config::get()?;
+    let args = Cli::parse();
 
-    let mime_types = mime::get(&config).await?;
-
-    // If not exists create
-    if let Err(_) = std::fs::read_dir(&config.root_directory) {
-        tokio::fs::create_dir(&config.root_directory).await?;
-        println!("Created directory {}", &config.root_directory);
+    match args.command {
+        Commands::Start { port, local } => start::run(port, local).await?,
     }
-
-    let address = format!("{}:{}", &config.host_ip, &config.port);
-
-    let app = router::get(AppState { config, mime_types });
-
-    let listener = tokio::net::TcpListener::bind(&address).await?;
-
-    println!("Listening at {address}...");
-
-    axum::serve(listener, app).await?;
 
     Ok(())
 }

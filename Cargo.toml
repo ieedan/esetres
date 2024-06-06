@@ -2,12 +2,21 @@
 name = "esetres"
 version = "0.1.0"
 edition = "2021"
+authors = ["Aidan Bleser"]
+readme = "README.md"
+documentation = "https://github.com/ieedan/esetres"
+homepage = "https://github.com/ieedan/esetres"
+description = "A self hosted s3 alternative."
+repository = "https://github.com/ieedan/esetres"
+keywords = ["file", "storage", "blob", "server", "s3"]
+license = "BSD 2-Clause License"
+license_file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 axum = "0.7.5"
-dotenvy = "0.15.7"
+clap = { version = "4.5.4", features = ["derive"] }
 reqwest = "0.12.4"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"

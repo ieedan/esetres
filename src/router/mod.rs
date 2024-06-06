@@ -1,12 +1,14 @@
 use crate::config;
 use axum::Router;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, net::Ipv4Addr, sync::Arc};
 use tower_http::cors::{Any, CorsLayer};
 
 pub mod buckets;
 pub mod files;
 
 pub struct AppState {
+    pub ip: Ipv4Addr,
+    pub port: u16,
     pub config: config::Object,
     pub mime_types: HashMap<String, String>,
 }
