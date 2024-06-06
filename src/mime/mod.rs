@@ -4,14 +4,10 @@ use serde_json::Value;
 
 use crate::config::{self};
 
-const MIME_TYPES_URL: &str = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json";
+const MIME_TYPES_DB_URL: &str = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json";
 
-struct Mime {
-
-}
-
-/// Checks the folder path defined by `MIME_TYPES_LOCAL_PATH` for
-/// files saved locally before fetching them from the source
+/// Returns a map of file extensions mapped to the correct MIME type
+/// Uses the local file if exists else it will retrieve the types from the database
 pub async fn get<'a>(
     config: &config::Object,
 ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
@@ -20,12 +16,12 @@ pub async fn get<'a>(
     let file = if let Ok(str) = tokio::fs::read_to_string(&config.mime_types.local_path).await {
         str
     } else {
-        println!("Getting mime types from {MIME_TYPES_URL}...");
+        println!("Getting mime types from {MIME_TYPES_DB_URL}...");
 
         // get file from remote
         let client = reqwest::Client::new();
         let res = client
-            .get(MIME_TYPES_URL)
+            .get(MIME_TYPES_DB_URL)
             .header("User-Agent", "esetres/0.1.0")
             .send()
             .await?;
