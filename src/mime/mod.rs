@@ -4,7 +4,7 @@ use serde_json::Value;
 
 use crate::config::{self};
 
-const MIME_TYPES_DB_URL: &str = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json";
+const MIME_TYPES_DB_URL: &str = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@1.52.0/db.json";
 
 /// Returns a map of file extensions mapped to the correct MIME type
 /// Uses the local file if exists else it will retrieve the types from the database

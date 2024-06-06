@@ -6,9 +6,9 @@ authors = ["Aidan Bleser"]
 readme = "README.md"
 documentation = "https://github.com/ieedan/esetres"
 homepage = "https://github.com/ieedan/esetres"
-description = "A self hosted s3 alternative."
+description = "A self hosted file storage server."
 repository = "https://github.com/ieedan/esetres"
-keywords = ["file", "storage", "blob", "server", "s3"]
+keywords = ["file", "storage", "blob", "server"]
 license = "BSD 2-Clause License"
 license_file = "LICENSE"
 
