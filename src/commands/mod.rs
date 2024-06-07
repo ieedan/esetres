@@ -29,7 +29,8 @@ pub enum Tokens {
         /// Name of the token
         name: String,
         /// The bucket scope of the token 
-        scope: Option<String>
+        #[clap(long, value_parser)]
+        scope: Option<String>,
     },
     /// Revoke an existing token
     Revoke {
