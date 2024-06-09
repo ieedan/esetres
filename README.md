@@ -10,6 +10,43 @@ A self hosted file storage server.
 -   Tokens to manage write access to buckets
     -   Mint, Revoke and List tokens from the CLI
 
+## Getting started
+
+### Environment Variables
+
+Create a .env file and add the `TOKEN_SECRET` variable. This will be used for the jwt encoding.
+
+Example .env
+```
+TOKEN_SECRET="secret"
+```
+
+## API
+
+### Health Check `GET/health`
+Returns a simple running status for the server.
+
+### Create bucket `POST/buckets` `(authed)`
+Creates a new bucket.
+
+Request Body:
+```json
+{
+    "name": "bucket name"
+}
+```
+
+### Cache Invalidate `POST/cache/invalidate`
+This is configured for local only access. It will invalidate the token cache causing a refetch from the database. This will be hit when you mint or revoke tokens.
+
+### Get File `GET/buckets/{bucket}/blob/{file_name}`
+Gets the requested file from the requested bucket.
+
+### Upload File `PUT/buckets/{bucket}/blob/{file_name}` `(authed)`
+Uploads the file to the requested bucket with the requested file name.
+
+Request Body: File Content In Bytes
+
 ## CLI
 
 ### Start
