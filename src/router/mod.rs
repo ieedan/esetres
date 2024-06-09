@@ -77,7 +77,6 @@ async fn health_check() -> String {
 }
 
 async fn authorization(
-    Extension(token_cache): Extension<HashMap<String, Token>>,
     request: Request,
     next: Next,
 ) -> Response {
