@@ -1,4 +1,4 @@
-use crate::db::schema::Token;
+use crate::db::schema::{Access, Token};
 
 use super::{is_authed, AppState};
 use axum::{
@@ -22,7 +22,7 @@ pub async fn create(
     Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
     Json(request): Json<CreateBucketRequest>,
 ) -> impl IntoResponse {
-    if !is_authed(headers, token_cache).await {
+    if !is_authed(headers, None, Access::WRITE, token_cache).await {
         return (StatusCode::UNAUTHORIZED).into_response();
     }
 

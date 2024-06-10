@@ -17,32 +17,45 @@ A self hosted file storage server.
 Create a .env file and add the `TOKEN_SECRET` variable. This will be used for the jwt encoding.
 
 Example .env
-```
+
+```js
+# Should be a strong secret for jwt encoding
 TOKEN_SECRET="secret"
+
+IP="127.0.0.1"
+PORT=3000
+# Determines whether or not to use http or https in the url
+HTTPS=0
 ```
 
 ## API
 
 ### Health Check `GET/health`
+
 Returns a simple running status for the server.
 
 ### Create bucket `POST/buckets` `(authed)`
+
 Creates a new bucket.
 
 Request Body:
+
 ```json
 {
-    "name": "bucket name"
+	"name": "bucket name"
 }
 ```
 
-### Cache Invalidate `POST/cache/invalidate`
+### Invalidate Cache `POST/cache/invalidate`
+
 This is configured for local only access. It will invalidate the token cache causing a refetch from the database. This will be hit when you mint or revoke tokens.
 
-### Get File `GET/buckets/{bucket}/blob/{file_name}`
-Gets the requested file from the requested bucket.
+### Get File `GET/buckets/{bucket}/{public | private}/{file_name}`
 
-### Upload File `PUT/buckets/{bucket}/blob/{file_name}` `(authed)`
+Gets the requested file from the requested bucket. Requests to `private` must be authorized.
+
+### Upload File `PUT/buckets/{bucket}/{public | private}/{file_name}` `(authed)`
+
 Uploads the file to the requested bucket with the requested file name.
 
 Request Body: File Content In Bytes
@@ -59,22 +72,42 @@ Listening at 127.0.0.1:3000...
 
 ### Tokens
 
-Mint
+#### Mint
+
+Create
 
 ```bash
 esetres tokens mint MY_TOKEN
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9eyJzdWI...
+New token (MY_TOKEN) created for scope (*).
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 ```
 
-List
+Set **Scope**
+
+```bash
+esetres tokens mint MY_TOKEN --scope default
+```
+
+Set **Access**
+
+```bash
+esetres tokens mint MY_TOKEN --access write
+```
+
+#### List
+
 ```bash
 esetres tokens list
 
-MY_TOKEN - 6/6/24
+Name                        Scope     Access  
+----------------------------------------------
+ANOTHER_REALLY_LONG_TOKEN | test    | full    
+NEW_TEST_TOKEN            | default | read    
+TEST_TOKEN                | *       | write    
 ```
 
-Revoke
+#### Revoke
 
 ```bash
 esetres tokens revoke MY_TOKEN

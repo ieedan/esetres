@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS tokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    scope TEXT NOT NULL,
+    bucket_scope TEXT NOT NULL,
+    access TEXT NOT NULL, -- read / write / full
     token TEXT NOT NULL
 )

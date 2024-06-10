@@ -19,7 +19,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Start => start::run().await?,
         Commands::Tokens(cmd) => match cmd {
             commands::Tokens::List => tokens::list::run().await?,
-            commands::Tokens::Mint { name, scope } => tokens::mint::run(name, scope).await?,
+            commands::Tokens::Mint {
+                name,
+                scope,
+                access,
+            } => tokens::mint::run(name, scope, access).await?,
             commands::Tokens::Revoke { name } => tokens::revoke::run(name).await?,
         },
         Commands::Migrate => migrate::run().await?,

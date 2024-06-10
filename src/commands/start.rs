@@ -13,7 +13,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     let address = format!("{}:{}", &config.ip, &config.port);
 
-    let app = router::get(AppState { config, mime_types });
+    let app = router::create(AppState { config, mime_types });
 
     let listener = tokio::net::TcpListener::bind(&address).await?;
 

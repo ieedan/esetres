@@ -1,13 +1,58 @@
+use std::fmt::Display;
+
 use super::connect;
 use bcrypt::hash;
+use clap::ValueEnum;
+use rusqlite::types::{FromSql, FromSqlError};
 use tokio::task;
 
 #[derive(Debug, Clone)]
 pub struct Token {
     pub id: i32,
     pub name: String,
-    pub scope: String,
+    pub bucket_scope: String,
+    pub access: Access,
     pub token: String,
+}
+
+#[derive(Clone, Debug, PartialEq, ValueEnum)]
+pub enum Access {
+    READ,
+    WRITE,
+    FULL,
+}
+
+impl FromSql for Access {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        let str = value.as_str()?;
+
+        match str {
+            "full" => Ok(Access::FULL),
+            "write" => Ok(Access::WRITE),
+            "read" => Ok(Access::READ),
+            &_ => Err(FromSqlError::InvalidType),
+        }
+    }
+}
+
+impl Access {
+    fn to_string(&self) -> String {
+        match self {
+            Access::READ => "read".to_string(),
+            Access::WRITE => "write".to_string(),
+            Access::FULL => "full".to_string(),
+        }
+    }
+}
+
+impl Display for Access {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Access::READ => write!(f, "read"),
+            Access::WRITE => write!(f, "write"),
+            Access::FULL => write!(f, "full"),
+        }
+    }
 }
 
 impl Token {
@@ -15,13 +60,16 @@ impl Token {
         let tokens = task::spawn_blocking(move || -> rusqlite::Result<Vec<Token>> {
             let conn = connect()?;
 
-            let mut stmt = conn.prepare("SELECT Id, Name, Scope, Token FROM tokens ORDER BY Id DESC")?;
+            let mut stmt = conn.prepare(
+                "SELECT id, name, bucket_scope, access, token FROM tokens ORDER BY Id DESC",
+            )?;
             let tokens_iter = stmt.query_map([], |row| {
                 Ok(Token {
                     id: row.get(0)?,
                     name: row.get(1)?,
-                    scope: row.get(2)?,
-                    token: row.get(3)?,
+                    bucket_scope: row.get(2)?,
+                    access: row.get(3)?,
+                    token: row.get(4)?,
                 })
             })?;
 
@@ -46,8 +94,13 @@ impl Token {
             let conn = connect()?;
 
             conn.execute(
-                "INSERT INTO tokens (name, token, scope) VALUES (?1, ?2, ?3)",
-                [&self.name, &token_hash, &self.scope],
+                "INSERT INTO tokens (name, token, access, bucket_scope) VALUES (?1, ?2, ?3, ?4)",
+                [
+                    &self.name,
+                    &token_hash,
+                    &self.access.to_string(),
+                    &self.bucket_scope,
+                ],
             )?;
 
             Ok(())
@@ -61,10 +114,7 @@ impl Token {
         task::spawn_blocking(move || -> rusqlite::Result<()> {
             let conn = connect()?;
 
-            conn.execute(
-                "DELETE FROM tokens WHERE name = ?1",
-                [name],
-            )?;
+            conn.execute("DELETE FROM tokens WHERE name = ?1", [name])?;
 
             Ok(())
         })

@@ -1,28 +1,54 @@
+use crate::db::schema::{Access, Token};
 use axum::{
     body::{Body, Bytes},
     extract::State,
     http::{header, HeaderMap, Response, StatusCode},
-    response::IntoResponse, Extension,
+    response::IntoResponse,
+    Extension,
 };
-use std::{path::Path, sync::Arc, collections::HashMap};
-use crate::db::schema::Token;
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 use super::{is_authed, AppState};
 use tokio::sync::Mutex;
 
-pub async fn upload(
+pub async fn public_upload(
     headers: HeaderMap,
     axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
     State(state): State<Arc<AppState>>,
     Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
     body: Bytes,
 ) -> impl IntoResponse {
-    if !is_authed(headers, token_cache).await {
+    upload(headers, bucket_id, resource_path, state, token_cache, body, false).await
+}
+
+pub async fn private_upload(
+    headers: HeaderMap,
+    axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
+    State(state): State<Arc<AppState>>,
+    Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
+    body: Bytes,
+) -> impl IntoResponse {
+    upload(headers, bucket_id, resource_path, state, token_cache, body, true).await
+}
+
+pub async fn upload(
+    headers: HeaderMap,
+    bucket_id: String,
+    resource_path: String,
+    state: Arc<AppState>,
+    token_cache: Arc<Mutex<HashMap<String, Token>>>,
+    body: Bytes,
+    private: bool
+) -> impl IntoResponse {
+    if !is_authed(headers, Some(&bucket_id), Access::WRITE, token_cache).await {
         return (StatusCode::UNAUTHORIZED).into_response();
     }
 
+    let scope = if private { "private" } else { "public" };
+
     let path = Path::new(&state.config.root_directory)
         .join(&bucket_id)
+        .join(scope)
         .join(&resource_path);
 
     let bucket_path = Path::new(&state.config.root_directory).join(&bucket_id);
@@ -44,16 +70,37 @@ pub async fn upload(
     (
         StatusCode::CREATED,
         format!(
-            "http://{}:{}/buckets/{bucket_id}/blob/{}",
-            &state.config.ip, &state.config.port, &resource_path
+            "{}/buckets/{bucket_id}/{scope}/{resource_path}",
+            &state.config.address()
         ),
     )
         .into_response()
 }
 
-pub async fn get(
+pub async fn private_get(
+    headers: HeaderMap,
     axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
     State(state): State<Arc<AppState>>,
+    Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
+) -> impl IntoResponse {
+    if !is_authed(headers, Some(&bucket_id), Access::READ, token_cache).await {
+        return (StatusCode::UNAUTHORIZED).into_response();
+    }
+
+    get(bucket_id, resource_path, state).await.into_response()
+}
+
+pub async fn public_get(
+    axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    get(bucket_id, resource_path, state).await
+}
+
+pub async fn get(
+    bucket_id: String,
+    resource_path: String,
+    state: Arc<AppState>,
 ) -> impl IntoResponse {
     let start_extension = resource_path.rfind(".");
 

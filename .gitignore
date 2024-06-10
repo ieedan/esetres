@@ -23,3 +23,4 @@ Cargo.lock
 .env
 mime-db.json
 buckets/
+db/database.db

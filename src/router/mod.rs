@@ -1,5 +1,13 @@
-use crate::{config, db::schema::Token, jwt::validate};
-use axum::{http::HeaderMap, Extension, Router};
+use crate::{
+    config,
+    db::schema::{Access, Token},
+    jwt::validate,
+};
+use axum::{
+    http::HeaderMap,
+    routing::{get, post, put},
+    Extension, Router,
+};
 use bcrypt::verify;
 use reqwest::Method;
 use std::{collections::HashMap, sync::Arc};
@@ -22,7 +30,7 @@ pub struct AppState {
     pub mime_types: HashMap<String, String>,
 }
 
-pub fn get(app_state: AppState) -> Router {
+pub fn create(app_state: AppState) -> Router {
     let state = Arc::new(app_state);
 
     let tokens: HashMap<String, Token> = HashMap::new();
@@ -43,20 +51,21 @@ pub fn get(app_state: AppState) -> Router {
         .route("/health", axum::routing::get(health::health_check))
         .route(
             "/buckets",
-            axum::routing::post(buckets::create)
-                .layer(axum::middleware::from_fn(middleware::authorization)),
+            post(buckets::create).layer(axum::middleware::from_fn(middleware::authorization)),
+        )
+        .route("/cache/invalidate", post(cache::invalidate).layer(private))
+        .route(
+            "/buckets/:bucketId/public/:resourcePath",
+            get(files::public_get),
         )
         .route(
-            "/cache/invalidate",
-            axum::routing::post(cache::invalidate).layer(private),
+            "/buckets/:bucketId/public/:resourcePath",
+            put(files::public_upload).layer(axum::middleware::from_fn(middleware::authorization)),
         )
         .route(
-            "/buckets/:bucketId/blob/:resourcePath",
-            axum::routing::get(files::get),
-        )
-        .route(
-            "/buckets/:bucketId/blob/:resourcePath",
-            axum::routing::put(files::upload)
+            "/buckets/:bucketId/private/:resourcePath",
+            get(files::private_get)
+                .put(files::private_upload)
                 .layer(axum::middleware::from_fn(middleware::authorization)),
         )
         .with_state(state)
@@ -69,6 +78,8 @@ pub fn get(app_state: AppState) -> Router {
 
 pub async fn is_authed(
     headers: HeaderMap,
+    bucket_id: Option<&str>,
+    required_access: Access,
     token_cache: Arc<Mutex<HashMap<String, Token>>>,
 ) -> bool {
     let token = if let Some(header) = headers.get("Authorization") {
@@ -92,6 +103,17 @@ pub async fn is_authed(
     } else {
         return false;
     };
+
+    // controls access to specific buckets
+    if let Some(identifier) = bucket_id {
+        if cached_token.bucket_scope != "*" && cached_token.bucket_scope != identifier {
+            return false;
+        }
+    }
+
+    if cached_token.access != Access::FULL && required_access != cached_token.access {
+        return false;
+    }
 
     if let Ok(valid) = verify(&token, &cached_token.token) {
         if !valid {
