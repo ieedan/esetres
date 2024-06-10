@@ -1,17 +1,26 @@
 use axum::{
     body::{Body, Bytes},
     extract::State,
-    http::{header, Response, StatusCode},
-    response::IntoResponse,
+    http::{header, HeaderMap, Response, StatusCode},
+    response::IntoResponse, Extension,
 };
-use std::{path::Path, sync::Arc};
-use super::AppState;
+use std::{path::Path, sync::Arc, collections::HashMap};
+use crate::db::schema::Token;
+
+use super::{is_authed, AppState};
+use tokio::sync::Mutex;
 
 pub async fn upload(
+    headers: HeaderMap,
     axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
     State(state): State<Arc<AppState>>,
+    Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
     body: Bytes,
 ) -> impl IntoResponse {
+    if !is_authed(headers, token_cache).await {
+        return (StatusCode::UNAUTHORIZED).into_response();
+    }
+
     let path = Path::new(&state.config.root_directory)
         .join(&bucket_id)
         .join(&resource_path);
