@@ -39,7 +39,7 @@ esetres start
 
 ## API
 
-> [!TIP]
+> [!NOTE]
 > Clients may be added in the future
 
 ### Health Check `GET/health`
