@@ -11,6 +11,7 @@ repository = "https://github.com/ieedan/esetres"
 keywords = ["file", "storage", "blob", "server"]
 license = "BSD 2-Clause License"
 license_file = "LICENSE"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
