@@ -7,3 +7,5 @@ pub mod router;
 pub mod commands;
 
 pub mod jwt;
+
+pub mod db;

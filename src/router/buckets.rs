@@ -1,7 +1,15 @@
-use super::AppState;
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use crate::db::schema::Token;
+
+use super::{is_authed, AppState};
+use axum::{
+    extract::State,
+    http::{HeaderMap, StatusCode},
+    response::IntoResponse,
+    Extension, Json,
+};
 use serde::Deserialize;
-use std::{path::Path, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
+use tokio::sync::Mutex;
 
 #[derive(Deserialize)]
 pub struct CreateBucketRequest {
@@ -9,9 +17,15 @@ pub struct CreateBucketRequest {
 }
 
 pub async fn create(
+    headers: HeaderMap,
     State(state): State<Arc<AppState>>,
+    Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
     Json(request): Json<CreateBucketRequest>,
 ) -> impl IntoResponse {
+    if !is_authed(headers, token_cache).await {
+        return (StatusCode::UNAUTHORIZED).into_response();
+    }
+
     let path = Path::new(&state.config.root_directory).join(&request.name);
 
     if let Ok(_) = tokio::fs::read_dir(&path).await {

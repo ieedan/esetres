@@ -36,7 +36,7 @@ pub async fn upload(
         StatusCode::CREATED,
         format!(
             "http://{}:{}/buckets/{bucket_id}/blob/{}",
-            &state.ip, &state.port, &resource_path
+            &state.config.ip, &state.config.port, &resource_path
         ),
     )
         .into_response()

@@ -54,23 +54,7 @@ Request Body: File Content In Bytes
 ```bash
 esetres start
 
-Listening at 0.0.0.0:8080...
-```
-
-Run locally
-
-```bash
-esetres start --local
-
 Listening at 127.0.0.1:3000...
-```
-
-Custom port
-
-```bash
-esetres start --port=5000
-
-Listening at 0.0.0.0:5000...
 ```
 
 ### Tokens

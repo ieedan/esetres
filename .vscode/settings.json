@@ -3,6 +3,7 @@
         "dotenv",
         "dotenvy",
         "esetres",
-        "hmac"
+        "hmac",
+        "rusqlite"
     ]
 }
