@@ -39,6 +39,9 @@ esetres start
 
 ## API
 
+> [!TIP]
+> Clients may be added in the future
+
 ### Health Check `GET/health`
 
 Returns a simple running status for the server.
