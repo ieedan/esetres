@@ -2,30 +2,39 @@
 
 A self hosted file storage server.
 
-## Features
-
--   Save any file using a rest endpoint
--   Retrieve files using a URL
--   Multiple `buckets`
--   Tokens to manage write access to buckets
-    -   Mint, Revoke and List tokens from the CLI
-
-## Getting started
+## Setup
 
 ### Environment Variables
 
-Create a .env file and add the `TOKEN_SECRET` variable. This will be used for the jwt encoding.
+Create a .env file and configure the following variables.
+
+- `TOKEN_SECRET` - The secret for jwt encoding (should be strong)
+- `IP` - The ip address of the server use `127.0.0.1` for local and the ip of the machine when hosting. **IMPORTANT** if you use 0.0.0.0 when hosting the server will still run but the cache will not refresh when changing tokens.
+- `PORT` - The port the server runs on
+- `HTTPS` - Specifies whether or not to use https in the url (1 for yes anything else for no)
 
 Example .env
 
 ```js
-# Should be a strong secret for jwt encoding
 TOKEN_SECRET="secret"
 
 IP="127.0.0.1"
 PORT=3000
-# Determines whether or not to use http or https in the url
 HTTPS=0
+```
+
+### Run Migration
+
+esetres uses a local sqlite database to store the tokens so you will need to run the migration.
+
+```bash
+esetres migrate
+```
+
+### Start the server
+
+```bash
+esetres start
 ```
 
 ## API
@@ -64,15 +73,31 @@ Request Body: File Content In Bytes
 
 ### Start
 
+Starts the server.
+
 ```bash
 esetres start
 
 Listening at 127.0.0.1:3000...
 ```
 
+### Migrate
+
+Creates the database and necessary tables.
+
+```bash
+esetres migrate
+```
+
 ### Tokens
 
+Tokens allow you to control access to the server. It uses jwt with the Bearer scheme meaning authorized routes require the authorization header.
+
+Tokens are cached by the server for fast responses and when you create or delete tokens the cache will automatically be updated.
+
 #### Mint
+
+Creates a new token with specified scope and access.
 
 Create
 
@@ -86,28 +111,34 @@ eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 Set **Scope**
 
 ```bash
+# default scope is "*"
 esetres tokens mint MY_TOKEN --scope default
 ```
 
 Set **Access**
 
 ```bash
+# default access is "read"
 esetres tokens mint MY_TOKEN --access write
 ```
 
 #### List
 
+Lists all existing tokens with the most recently created being at the top.
+
 ```bash
 esetres tokens list
 
-Name                        Scope     Access  
+Name                        Scope     Access
 ----------------------------------------------
-ANOTHER_REALLY_LONG_TOKEN | test    | full    
-NEW_TEST_TOKEN            | default | read    
-TEST_TOKEN                | *       | write    
+ANOTHER_REALLY_LONG_TOKEN | test    | full
+NEW_TEST_TOKEN            | default | read
+TEST_TOKEN                | *       | write
 ```
 
 #### Revoke
+
+Deletes a token from the database.
 
 ```bash
 esetres tokens revoke MY_TOKEN
