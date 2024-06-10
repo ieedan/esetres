@@ -40,6 +40,14 @@ pub async fn create(
         return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response();
     }
 
+    if let Err(err) = tokio::fs::create_dir(&path.join("public")).await {
+        return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response();
+    }
+
+    if let Err(err) = tokio::fs::create_dir(&path.join("private")).await {
+        return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response();
+    }
+
     (
         StatusCode::CREATED,
         format!("({}) was created!", &request.name),

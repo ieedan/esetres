@@ -1,4 +1,5 @@
-use crate::{config, mime, router::{self, AppState}};
+use crate::{config, mime, router::{self, AppState}, db::schema::Token};
+use std::collections::HashMap;
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = config::get();
@@ -13,7 +14,14 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     let address = format!("{}:{}", &config.ip, &config.port);
 
-    let app = router::create(AppState { config, mime_types });
+    let tokens = Token::get_all().await?;
+
+    let mut tokens_map = HashMap::new();
+    for token in tokens {
+        tokens_map.insert(token.name.clone(), token);
+    }
+
+    let app = router::create(tokens_map, AppState { config, mime_types });
 
     let listener = tokio::net::TcpListener::bind(&address).await?;
 

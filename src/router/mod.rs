@@ -30,10 +30,8 @@ pub struct AppState {
     pub mime_types: HashMap<String, String>,
 }
 
-pub fn create(app_state: AppState) -> Router {
+pub fn create(tokens: HashMap<String, Token>, app_state: AppState) -> Router {
     let state = Arc::new(app_state);
-
-    let tokens: HashMap<String, Token> = HashMap::new();
 
     let token_cache = Arc::new(Mutex::new(tokens));
 

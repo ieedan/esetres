@@ -87,20 +87,21 @@ pub async fn private_get(
         return (StatusCode::UNAUTHORIZED).into_response();
     }
 
-    get(bucket_id, resource_path, state).await.into_response()
+    get(bucket_id, resource_path, state, true).await.into_response()
 }
 
 pub async fn public_get(
     axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
     State(state): State<Arc<AppState>>,
 ) -> impl IntoResponse {
-    get(bucket_id, resource_path, state).await
+    get(bucket_id, resource_path, state, false).await
 }
 
 pub async fn get(
     bucket_id: String,
     resource_path: String,
     state: Arc<AppState>,
+    private: bool
 ) -> impl IntoResponse {
     let start_extension = resource_path.rfind(".");
 
@@ -111,8 +112,11 @@ pub async fn get(
         None
     };
 
+    let scope = if private { "private" } else { "public" };
+
     let resource_path = Path::new(&state.config.root_directory)
         .join(bucket_id)
+        .join(scope)
         .join(&resource_path);
 
     let buffer = if let Ok(buffer) = tokio::fs::read(&resource_path).await {
