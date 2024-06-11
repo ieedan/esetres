@@ -18,5 +18,10 @@ target/
 
 .env
 mime-db.json
-./buckets/
 db/
+/buckets
+!/examples/basic/buckets
+!/src/commands/buckets
+!/examples/basic/db
+!/examples/basic/.env
+!/examples/basic/mime-db.json

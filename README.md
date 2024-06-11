@@ -27,6 +27,9 @@ esetres init
 esetres start
 ```
 
+> [!TIP]
+> See our [examples](https://github.com/ieedan/esetres/tree/main/examples) to see how to host and structure your server.
+
 ## API
 
 > [!NOTE]
