@@ -18,5 +18,5 @@ target/
 
 .env
 mime-db.json
-buckets/
+./buckets/
 db/
