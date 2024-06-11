@@ -9,6 +9,7 @@ homepage = "https://github.com/ieedan/esetres"
 description = "A self hosted file storage server."
 repository = "https://github.com/ieedan/esetres"
 keywords = ["file", "storage", "blob", "server"]
+license = "BSD-2-Clause"
 license_file = "LICENSE"
 
 [[bin]]
