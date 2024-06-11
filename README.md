@@ -178,12 +178,16 @@ eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 
 Set **Scope**
 
+Scope allows you to limit the buckets a token has access to.
+
 ```bash
 # default scope is "*"
 esetres tokens mint MY_TOKEN --scope default
 ```
 
 Set **Access**
+
+Access allows you to limit the permissions a token has to create buckets, upload files, and read files.
 
 ```bash
 # default access is "read"
