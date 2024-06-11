@@ -6,13 +6,16 @@ A self hosted file storage server.
 
 ### Install
 
-```
+```bash
 cargo install esetres
+
+# check version to verify installation
+esetres -V
 ```
 
 ### Run Init
 
-Run the init command and go through the setup process.
+Run the [init](#init) command and go through the setup process.
 
 ```bash
 esetres init
@@ -41,7 +44,7 @@ Request Body:
 
 ```json
 {
-	"name": "bucket name"
+	"name": "bucket_name"
 }
 ```
 
