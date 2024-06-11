@@ -19,4 +19,4 @@ target/
 .env
 mime-db.json
 buckets/
-db/database.db
+db/

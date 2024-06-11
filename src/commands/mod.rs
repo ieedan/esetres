@@ -8,8 +8,14 @@ pub mod tokens;
 
 pub mod migrate;
 
+pub mod init;
+
+pub mod buckets;
+
 #[derive(Subcommand, Debug)]
 pub enum Commands {
+    /// Takes you through the setup process
+    Init,
     /// Starts the server
     Start,
     /// Allows you to manage tokens from the CLI
@@ -17,6 +23,9 @@ pub enum Commands {
     Tokens(Tokens),
     /// Creates the sqlite database if it doesn't exist and creates the required tables
     Migrate,
+    /// Allows you to manage buckets from the CLI
+    #[command(subcommand)]
+    Buckets(Buckets),
 }
 
 #[derive(Subcommand, Debug)]
@@ -39,4 +48,19 @@ pub enum Tokens {
         /// Name of the token
         name: String,
     },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum Buckets {
+    /// List all buckets
+    List,
+    /// Create a new bucket
+    Create {
+        /// Name of the token
+        name: String,
+    },
+    Delete {
+        /// Deletes the bucket
+        name: String
+    }
 }

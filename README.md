@@ -4,31 +4,18 @@ A self hosted file storage server.
 
 ## Setup
 
-### Environment Variables
+### Install
 
-Create a .env file and configure the following variables.
-
-- `TOKEN_SECRET` - The secret for jwt encoding (should be strong)
-- `IP` - The ip address of the server use `127.0.0.1` for local and the ip of the machine when hosting. **IMPORTANT** if you use 0.0.0.0 when hosting the server will still run but the cache will not refresh when changing tokens.
-- `PORT` - The port the server runs on
-- `HTTPS` - Specifies whether or not to use https in the url (1 for yes anything else for no)
-
-Example .env
-
-```js
-TOKEN_SECRET="secret"
-
-IP="127.0.0.1"
-PORT=3000
-HTTPS=0
+```
+cargo install esetres
 ```
 
-### Run Migration
+### Run Init
 
-esetres uses a local sqlite database to store the tokens so you will need to run the migration.
+Run the init command and go through the setup process.
 
 ```bash
-esetres migrate
+esetres init
 ```
 
 ### Start the server
@@ -74,6 +61,48 @@ Request Body: File Content In Bytes
 
 ## CLI
 
+### Init
+
+Step by step process for setting up the environment variables, running the migration and creating your first bucket.
+
+```bash
+esetres init
+
+Welcome to esetres cli!
+|
+o Do you want us to generate the token secret? yes
+|
+✓ Generated token secret.
+|
+o Select your the ip: 172.31.144.1
+|
+o Enter the port: 8080
+|
+o Use https? no
+
+TOKEN_SECRET="[hidden]"
+
+IP="172.31.144.1"
+PORT="8080"
+HTTPS=0
+
+o .env file Ok? yes
+|
+✓ Created .env file.
+|
+o Run sqlite migration? yes
+|
+✓ Ran sqlite migration.
+|
+o Create a bucket? yes
+|
+o Enter the bucket name: default
+|
+✓ Bucket [default] created.
+|
+✓ Completed initialization.
+```
+
 ### Start
 
 Starts the server.
@@ -84,12 +113,45 @@ esetres start
 Listening at 127.0.0.1:3000...
 ```
 
-### Migrate
+### Run Migration
 
-Creates the database and necessary tables.
+esetres uses a local sqlite database to store the tokens. In the `init` function you can choose to run this automatically or you can run it yourself at any time with:
 
 ```bash
 esetres migrate
+```
+
+### Buckets
+
+You can create buckets from the api or by creating the folders yourself on the server. However the CLI enables some extra functionality.
+
+#### Create
+
+Creates a new bucket and the required folders.
+
+```bash
+esetres buckets create my_bucket
+```
+
+#### Delete
+
+Deletes the bucket and all contents.
+
+```bash
+esetres buckets delete my_bucket
+```
+
+#### List
+
+Lists all the buckets and their last modified time.
+
+```bash
+esetres buckets list
+
+Name      Modified
+-----------------------------------------------
+default | 2024-06-11 09:36:37.522380 -05:00
+test    | 2024-06-11 09:44:01.888576100 -05:00
 ```
 
 ### Tokens

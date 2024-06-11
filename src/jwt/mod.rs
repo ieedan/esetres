@@ -2,12 +2,9 @@ use jsonwebtoken::{
     decode, encode, Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation,
 };
 use serde::{Deserialize, Serialize};
-use std::{
-    env,
-    time::{Duration, SystemTime, UNIX_EPOCH},
-};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-const SECRET_ENV_NAME: &str = "TOKEN_SECRET";
+use crate::config;
 
 const ISSUER: &str = "esetres-cli";
 
@@ -25,7 +22,7 @@ pub struct Claims {
 
 /// Create a new token
 pub fn create(name: String, scope: String) -> Result<String, Box<dyn std::error::Error>> {
-    let secret = env::var(SECRET_ENV_NAME).unwrap();
+    let config = config::get();
 
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?;
 
@@ -39,7 +36,7 @@ pub fn create(name: String, scope: String) -> Result<String, Box<dyn std::error:
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(secret.as_ref()),
+        &EncodingKey::from_secret(config.token_secret.as_ref()),
     )?;
 
     Ok(token)
@@ -47,13 +44,13 @@ pub fn create(name: String, scope: String) -> Result<String, Box<dyn std::error:
 
 /// Attempts to validate the jwt upon success returns the token with its claims
 pub fn validate(token: String) -> Result<TokenData<Claims>, jsonwebtoken::errors::Error> {
-    let secret = env::var(SECRET_ENV_NAME).unwrap();
+    let config = config::get();
 
     let validation = create_validator();
 
     decode::<Claims>(
         &token.as_str(),
-        &DecodingKey::from_secret(secret.as_ref()),
+        &DecodingKey::from_secret(config.token_secret.as_ref()),
         &validation,
     )
 }

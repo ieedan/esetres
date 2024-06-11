@@ -11,16 +11,24 @@ repository = "https://github.com/ieedan/esetres"
 keywords = ["file", "storage", "blob", "server"]
 license = "BSD 2-Clause License"
 license_file = "LICENSE"
-build = "build.rs"
+
+[[bin]]
+name = "esetres"
+path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 axum = "0.7.5"
 bcrypt = "0.15.1"
+chrono = "0.4.38"
 clap = { version = "4.5.4", features = ["derive"] }
+colored = "2.1.0"
+dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
 dotenvy = "0.15.7"
+get_if_addrs = "0.5.3"
 jsonwebtoken = "9.3.0"
+rand = "0.8.5"
 reqwest = "0.12.4"
 rusqlite = { version = "0.31.0", features = ["bundled"] }
 serde = { version = "1.0.203", features = ["derive"] }

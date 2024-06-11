@@ -1,5 +1,5 @@
 use clap::Parser;
-use esetres::commands::{self, migrate, start, tokens, Commands};
+use esetres::commands::{self, buckets, init, migrate, start, tokens, Commands};
 
 #[derive(Parser, Debug)]
 #[command(version, about, author, long_about = None)]
@@ -11,8 +11,6 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenvy::dotenv().ok();
-
     let args = Cli::parse();
 
     match args.command {
@@ -27,6 +25,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             commands::Tokens::Revoke { name } => tokens::revoke::run(name).await?,
         },
         Commands::Migrate => migrate::run().await?,
+        Commands::Init => init::run().await?,
+        Commands::Buckets(cmd) => match cmd {
+            commands::Buckets::List => buckets::list::run().await?,
+            commands::Buckets::Create { name } => buckets::create::run(&name).await?,
+            commands::Buckets::Delete { name } => buckets::delete::run(&name).await?,
+        },
     }
 
     Ok(())
