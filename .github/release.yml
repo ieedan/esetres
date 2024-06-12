@@ -1,0 +1,11 @@
+name: Release ${{ github.event.release.tag_name }}
+body: |
+  ## Changes
+  {{DEFAULT}}
+
+  ## Upgrade Guide
+  Just run:
+  
+  ```bash
+  cargo install esetres --force
+  ```
