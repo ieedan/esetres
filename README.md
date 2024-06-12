@@ -1,8 +1,8 @@
 # esetres
 
-A self hosted file storage server.
+A single install self hosted file storage server.
 
-## Setup
+## Get Started
 
 ### Install
 
