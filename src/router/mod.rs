@@ -58,12 +58,15 @@ pub fn create(tokens: HashMap<String, Token>, app_state: AppState) -> Router {
         )
         .route(
             "/buckets/:bucketId/public/:resourcePath",
-            put(files::public_upload).layer(axum::middleware::from_fn(middleware::authorization)),
+            put(files::public_upload)
+                .delete(files::public_delete)
+                .layer(axum::middleware::from_fn(middleware::authorization)),
         )
         .route(
             "/buckets/:bucketId/private/:resourcePath",
             get(files::private_get)
                 .put(files::private_upload)
+                .delete(files::private_delete)
                 .layer(axum::middleware::from_fn(middleware::authorization)),
         )
         .with_state(state)
