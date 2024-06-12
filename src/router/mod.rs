@@ -87,7 +87,13 @@ pub async fn is_authed(
     let token = if let Some(header) = headers.get("Authorization") {
         // remove `Bearer ` prefix to get token
         let header = header.to_str().unwrap();
-        &header["Bearer ".len()..]
+        
+        let t = header.trim_start_matches("Bearer ");
+        if t == "" {
+            return false;
+        }
+
+        t
     } else {
         return false;
     };

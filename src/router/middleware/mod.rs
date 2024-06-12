@@ -16,7 +16,13 @@ pub async fn authorization(request: Request, next: Next) -> Response {
     let token = if let Some(header) = request.headers().get("Authorization") {
         // remove `Bearer ` prefix to get token
         let header = header.to_str().unwrap();
-        &header["Bearer ".len()..]
+        
+        let t = header.trim_start_matches("Bearer ");
+        if t == "" {
+            return (StatusCode::UNAUTHORIZED).into_response();
+        }
+
+        t
     } else {
         return (StatusCode::UNAUTHORIZED).into_response();
     };
