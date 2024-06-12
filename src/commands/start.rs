@@ -1,5 +1,5 @@
 use crate::{config, mime, router::{self, AppState}, db::schema::Token};
-use std::collections::HashMap;
+use std::{collections::HashMap, net::SocketAddr};
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = config::get();
@@ -27,7 +27,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Listening at {address}...");
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }
