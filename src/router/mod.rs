@@ -9,7 +9,6 @@ use axum::{
     Extension, Router,
 };
 use bcrypt::verify;
-use reqwest::Method;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 use tower::ServiceBuilder;
@@ -31,18 +30,17 @@ pub struct AppState {
 }
 
 pub fn create(tokens: HashMap<String, Token>, app_state: AppState) -> Router {
+    /* State initialization */
+
     let state = Arc::new(app_state);
 
     let token_cache = Arc::new(Mutex::new(tokens));
 
+    /* CORS Config */
+
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)
-        .allow_headers(Any);
-
-    let private = CorsLayer::new()
-        .allow_private_network(true)
-        .allow_methods([Method::POST])
         .allow_headers(Any);
 
     axum::Router::new()
@@ -51,7 +49,10 @@ pub fn create(tokens: HashMap<String, Token>, app_state: AppState) -> Router {
             "/buckets",
             post(buckets::create).layer(axum::middleware::from_fn(middleware::authorization)),
         )
-        .route("/cache/invalidate", post(cache::invalidate).layer(private))
+        .route(
+            "/cache/invalidate",
+            post(cache::invalidate).layer(axum::middleware::from_fn(middleware::from_host)),
+        )
         .route(
             "/buckets/:bucketId/public/:resourcePath",
             get(files::public_get),
@@ -86,7 +87,13 @@ pub async fn is_authed(
     let token = if let Some(header) = headers.get("Authorization") {
         // remove `Bearer ` prefix to get token
         let header = header.to_str().unwrap();
-        &header["Bearer ".len()..]
+        
+        let t = header.trim_start_matches("Bearer ");
+        if t == "" {
+            return false;
+        }
+
+        t
     } else {
         return false;
     };

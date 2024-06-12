@@ -1,5 +1,14 @@
-use crate::jwt::validate;
-use axum::{extract::Request, middleware::Next, response::{IntoResponse, Response}};
+use std::{
+    net::{IpAddr, SocketAddr},
+    str::FromStr,
+};
+
+use crate::{config, jwt::validate};
+use axum::{
+    extract::{ConnectInfo, Request},
+    middleware::Next,
+    response::{IntoResponse, Response},
+};
 use reqwest::StatusCode;
 
 /// Checks for token presence and validates it
@@ -7,7 +16,13 @@ pub async fn authorization(request: Request, next: Next) -> Response {
     let token = if let Some(header) = request.headers().get("Authorization") {
         // remove `Bearer ` prefix to get token
         let header = header.to_str().unwrap();
-        &header["Bearer ".len()..]
+        
+        let t = header.trim_start_matches("Bearer ");
+        if t == "" {
+            return (StatusCode::UNAUTHORIZED).into_response();
+        }
+
+        t
     } else {
         return (StatusCode::UNAUTHORIZED).into_response();
     };
@@ -16,7 +31,21 @@ pub async fn authorization(request: Request, next: Next) -> Response {
         return (StatusCode::UNAUTHORIZED).into_response();
     }
 
-    let response = next.run(request).await;
+    next.run(request).await
+}
 
-    response
+pub async fn from_host(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    request: Request,
+    next: Next,
+) -> Response {
+    let config = config::get();
+
+    let valid_ip = IpAddr::from_str(&config.ip).unwrap();
+
+    if addr.ip() != valid_ip {
+        return (StatusCode::UNAUTHORIZED).into_response();
+    }
+
+    next.run(request).await
 }
