@@ -65,6 +65,10 @@ Uploads the file to the requested bucket with the requested file name.
 
 Request Body: File Content In Bytes
 
+### Delete File `DELETE/buckets/{bucket}/{public | private}/{file_name}` `(authed)`
+
+Deletes the file with the requested bucket and file name.
+
 ## CLI
 
 ### Init
