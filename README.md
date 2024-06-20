@@ -71,6 +71,9 @@ Deletes the file with the requested bucket and file name.
 
 ## CLI
 
+> [!WARNING]
+> All commands must be run from the same directory as the server.
+
 ### Init
 
 Step by step process for setting up the environment variables, running the migration and creating your first bucket.
