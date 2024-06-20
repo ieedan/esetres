@@ -76,7 +76,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         ips.push("Enter my own".to_string());
 
         let selected_ip = FuzzySelect::new()
-            .with_prompt(format!("{o} Select your the ip"))
+            .with_prompt(format!("{o} Select your ip"))
             .items(&ips)
             .default(ips.len() - 1)
             .interact()?;
