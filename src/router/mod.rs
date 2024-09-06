@@ -25,8 +25,7 @@ pub mod health;
 pub mod middleware;
 
 pub struct AppState {
-    pub config: config::Object,
-    pub mime_types: HashMap<String, String>,
+    pub config: config::Object
 }
 
 pub fn create(tokens: HashMap<String, Token>, app_state: AppState) -> Router {
