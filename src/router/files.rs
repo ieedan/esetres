@@ -1,7 +1,7 @@
 use crate::db::schema::{Access, Token};
 use axum::{
     body::{Body, Bytes},
-    extract::State,
+    extract::{Multipart, State},
     http::{header, HeaderMap, Response, StatusCode},
     response::IntoResponse,
     Extension,
@@ -16,9 +16,18 @@ pub async fn public_upload(
     axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
     State(state): State<Arc<AppState>>,
     Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
-    body: Bytes,
+    multipart: Multipart,
 ) -> impl IntoResponse {
-    upload(headers, bucket_id, resource_path, state, token_cache, body, false).await
+    upload(
+        headers,
+        bucket_id,
+        resource_path,
+        state,
+        token_cache,
+        multipart,
+        false,
+    )
+    .await
 }
 
 pub async fn private_upload(
@@ -26,9 +35,18 @@ pub async fn private_upload(
     axum::extract::Path((bucket_id, resource_path)): axum::extract::Path<(String, String)>,
     State(state): State<Arc<AppState>>,
     Extension(token_cache): Extension<Arc<Mutex<HashMap<String, Token>>>>,
-    body: Bytes,
+    multipart: Multipart,
 ) -> impl IntoResponse {
-    upload(headers, bucket_id, resource_path, state, token_cache, body, true).await
+    upload(
+        headers,
+        bucket_id,
+        resource_path,
+        state,
+        token_cache,
+        multipart,
+        true,
+    )
+    .await
 }
 
 pub async fn upload(
@@ -37,12 +55,22 @@ pub async fn upload(
     resource_path: String,
     state: Arc<AppState>,
     token_cache: Arc<Mutex<HashMap<String, Token>>>,
-    body: Bytes,
-    private: bool
+    multipart: Multipart,
+    private: bool,
 ) -> impl IntoResponse {
     if !is_authed(headers, Some(&bucket_id), Access::WRITE, token_cache).await {
         return (StatusCode::UNAUTHORIZED).into_response();
     }
+
+    let field = if let Some(field) = multipart.next_field().await.unwrap() {
+        field
+    } else {
+        return (
+            StatusCode::BAD_REQUEST,
+            format!("You forgot to include a file!"),
+        )
+            .into_response();
+    };
 
     let scope = if private { "private" } else { "public" };
 
@@ -62,8 +90,10 @@ pub async fn upload(
             .into_response();
     }
 
+    let data = field.bytes().await.unwrap();
+
     // Write to the file
-    if let Err(err) = tokio::fs::write(&path, body).await {
+    if let Err(err) = tokio::fs::write(&path, data).await {
         return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response();
     }
 
@@ -87,7 +117,9 @@ pub async fn private_get(
         return (StatusCode::UNAUTHORIZED).into_response();
     }
 
-    get(bucket_id, resource_path, state, true).await.into_response()
+    get(bucket_id, resource_path, state, true)
+        .await
+        .into_response()
 }
 
 pub async fn public_get(
@@ -101,7 +133,7 @@ pub async fn get(
     bucket_id: String,
     resource_path: String,
     state: Arc<AppState>,
-    private: bool
+    private: bool,
 ) -> impl IntoResponse {
     let start_extension = resource_path.rfind(".");
 
@@ -173,7 +205,7 @@ pub async fn delete(
     resource_path: String,
     state: Arc<AppState>,
     token_cache: Arc<Mutex<HashMap<String, Token>>>,
-    private: bool
+    private: bool,
 ) -> impl IntoResponse {
     if !is_authed(headers, Some(&bucket_id), Access::WRITE, token_cache).await {
         return (StatusCode::UNAUTHORIZED).into_response();

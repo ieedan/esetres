@@ -19,7 +19,7 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["multipart"] }
 bcrypt = "0.15.1"
 chrono = "0.4.38"
 clap = { version = "4.5.4", features = ["derive"] }
