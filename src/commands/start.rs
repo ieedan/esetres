@@ -1,10 +1,8 @@
-use crate::{config, mime, router::{self, AppState}, db::schema::Token};
+use crate::{config, router::{self, AppState}, db::schema::Token};
 use std::{collections::HashMap, net::SocketAddr};
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = config::get();
-    
-    let mime_types = mime::get(&config).await?;
 
     // If not exists create
     if let Err(_) = std::fs::read_dir(&config.root_directory) {
@@ -21,7 +19,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         tokens_map.insert(token.name.clone(), token);
     }
 
-    let app = router::create(tokens_map, AppState { config, mime_types });
+    let app = router::create(tokens_map, AppState { config });
 
     let listener = tokio::net::TcpListener::bind(&address).await?;
 
