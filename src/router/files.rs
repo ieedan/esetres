@@ -8,7 +8,7 @@ use axum::{
 use std::{collections::HashMap, path::Path, sync::Arc};
 
 use super::{is_authed, AppState};
-use tokio::{fs::File, sync::Mutex};
+use tokio::{fs::File, io::AsyncWriteExt, sync::Mutex};
 use tokio_util::io::ReaderStream;
 
 pub async fn public_upload(
@@ -62,14 +62,12 @@ pub async fn upload(
         return (StatusCode::UNAUTHORIZED).into_response();
     }
 
-    let field = if let Some(field) = multipart.next_field().await.unwrap() {
-        field
-    } else {
-        return (
-            StatusCode::BAD_REQUEST,
-            format!("You forgot to include a file!"),
-        )
-            .into_response();
+    let mut field = match multipart.next_field().await {
+        Ok(Some(field)) => {
+            field
+        },
+        Ok(None) => return (StatusCode::BAD_REQUEST, format!("You forgot to include a file!")).into_response(),
+        Err(e) => return (StatusCode::BAD_REQUEST, format!("Error processing multipart: {}", e)).into_response(),
     };
 
     let scope = if private { "private" } else { "public" };
@@ -90,11 +88,25 @@ pub async fn upload(
             .into_response();
     }
 
-    let data = field.bytes().await.unwrap();
+    let mut file = match tokio::fs::File::create(&path).await {
+        Ok(file) => file,
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to create file: {}", e)).into_response(),
+    };
 
-    // Write to the file
-    if let Err(err) = tokio::fs::write(&path, data).await {
-        return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response();
+    // streams the form data into the file
+    loop {
+        match field.chunk().await {
+            Ok(Some(chunk)) => {
+                if let Err(e) = file.write_all(&chunk).await {
+                    return (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to write to file: {}", e)).into_response();
+                }
+            }
+            Ok(None) => break, // End of the stream
+            Err(e) => {
+                println!("Error reading chunk: {:?}", e);
+                return (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to read file data: {}", e)).into_response();
+            }
+        }
     }
 
     (

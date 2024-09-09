@@ -19,7 +19,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         tokens_map.insert(token.name.clone(), token);
     }
 
-    let app = router::create(tokens_map, AppState { config });
+    let app = router::create(tokens_map, &config.clone(), AppState { config });
 
     let listener = tokio::net::TcpListener::bind(&address).await?;
 

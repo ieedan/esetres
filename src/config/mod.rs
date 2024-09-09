@@ -1,13 +1,13 @@
 use std::env;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Object {
     pub root_directory: String,
-    pub mime_types: MimeTypes,
     pub token_secret: String,
     pub ip: String,
     pub port: u16,
     pub https: bool,
+    pub max_size_mb: usize,
 }
 
 impl Object {
@@ -40,8 +40,9 @@ pub fn get() -> Object {
             .parse()
             .unwrap(),
         root_directory: "./buckets".to_string(),
-        mime_types: MimeTypes {
-            local_path: "./mime-db.json".to_string(),
-        },
+        max_size_mb: env::var("MAX_SIZE_MB")
+            .unwrap_or("2".to_string())
+            .parse()
+            .unwrap(),
     }
 }

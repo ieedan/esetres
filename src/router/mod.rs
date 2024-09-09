@@ -4,9 +4,7 @@ use crate::{
     jwt::validate,
 };
 use axum::{
-    http::HeaderMap,
-    routing::{get, post, put},
-    Extension, Router,
+    extract::DefaultBodyLimit, http::HeaderMap, routing::{get, post, put}, Extension, Router
 };
 use bcrypt::verify;
 use std::{collections::HashMap, sync::Arc};
@@ -28,7 +26,7 @@ pub struct AppState {
     pub config: config::Object
 }
 
-pub fn create(tokens: HashMap<String, Token>, app_state: AppState) -> Router {
+pub fn create(tokens: HashMap<String, Token>, config: &config::Object, app_state: AppState) -> Router {
     /* State initialization */
 
     let state = Arc::new(app_state);
@@ -73,7 +71,8 @@ pub fn create(tokens: HashMap<String, Token>, app_state: AppState) -> Router {
         .layer(
             ServiceBuilder::new()
                 .layer(cors)
-                .layer(Extension(token_cache)),
+                .layer(Extension(token_cache))
+                .layer(DefaultBodyLimit::max(config.max_size_mb * 1024 * 1024)),
         )
 }
 
